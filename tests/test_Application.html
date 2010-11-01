@@ -4,7 +4,7 @@
 	
 	<title>Application Test</title>
 	
-	<!-- required: a default theme file, and SampleWidget css -->
+	<!-- a default theme file (not strictly necessary here)-->
 	<link rel="stylesheet" id="themeStyles" href="../../dijit/themes/claro/claro.css">
 
 	<style type="text/css">
@@ -21,9 +21,6 @@
 	</script>
 	<script type="text/javascript" src="../../dojo/dojo.js"></script>
 
-	<!-- do not use! only for testing dynamic themes -->
-	<script type="text/javascript" src="../../dijit/tests/_testCommon.js"></script>
-	
 	<!-- debugging include -->
 	<script type="text/javascript" src="../Application.js"></script>
 	<script type="text/javascript">
@@ -64,8 +61,9 @@
 					setUp: function() {
 						var callsMap = this.methodCalls = {};
 						var handles = this.handles = [];
-						dojo.forEach(["bootstrap", "initialize", "postInitialize"], function(method){
+						dojo.forEach(["bootstrap", "initialize", "postInitialize", "postCreate", "startup", "destroy"], function(method){
 							callsMap[method] = false;
+							console.log("hooking into: ", method);
 							handles.push(dojo.connect(app.Application.prototype, method, function(){
 								console.log("call to Application lifecycle method: ", method);
 								callsMap[method] = true;
@@ -73,10 +71,14 @@
 						});
 						this.inherited("setUp", arguments);
 					},
-					runTests: function(t){
+					runTest: function(t){
 						var app = this.instance;
+						app.run();
+						app.tearDown();
+						
 						var ok = true;
 						for(var m in this.methodCalls) {
+							t.assertTrue(this.methodCalls[m],  m + " method was called");
 							ok &= this.methodCalls[m];
 						}
 						t.assertTrue(ok, "All setUp lifecycle methods were called");

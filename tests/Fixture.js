@@ -1,6 +1,6 @@
-dojo.provide("app.tests.Fixture");
+dojo.provide("tapp.tests.Fixture");
 
-dojo.declare("app.tests.Fixture", null, {
+dojo.declare("tapp.tests.Fixture", null, {
 	name: "",
 	timeout: 2000, // 2 seconds.
 
@@ -18,10 +18,10 @@ dojo.declare("app.tests.Fixture", null, {
 			};
 		}
 		if(!props.name) {
-			props.name = name || "test_" + (app.tests.Fixture._count++);
+			props.name = name || "test_" + (tapp.tests.Fixture._count++);
 		}
 		dojo.mixin(this, props);
 	},
 	tearDown: function() {}
 });
-app.tests.Fixture._count = 0;
+tapp.tests.Fixture._count = 0;

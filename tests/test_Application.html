@@ -16,7 +16,7 @@
 	<script type="text/javascript">
 		djConfig = {
 			isDebug: true,
-			modulePaths: { "app": "../dojo-templateApp" }
+			modulePaths: { "tapp": "../dojo-templateApp" }
 		}
 	</script>
 	<script type="text/javascript" src="../../dojo/dojo.js"></script>
@@ -24,16 +24,16 @@
 	<!-- debugging include -->
 	<script type="text/javascript" src="../Application.js"></script>
 	<script type="text/javascript">
-		dojo.require("app.Application");
+		dojo.require("tapp.Application");
 
         dojo.require("doh.runner");
-		dojo.require("app.tests.Fixture");
+		dojo.require("tapp.tests.Fixture");
 
 		dojo.ready(function(){
 			// a fixture class to keep the tests DRY
-			var TF = dojo.declare(app.tests.Fixture, {
+			var TF = dojo.declare(tapp.tests.Fixture, {
 				setUp: function() {
-					this.instance = new app.Application({
+					this.instance = new tapp.Application({
 						id: this.name + "_app",
 						name: "Test"
 					});
@@ -46,13 +46,13 @@
 
 			doh.register("smoketest", [
 				function classExists(t){
-					t.assertTrue(app.Application);
-					t.assertEqual("function", typeof app.Application);
+					t.assertTrue(tapp.Application);
+					t.assertEqual("function", typeof tapp.Application);
 				},
 				new TF("fixtureTest", function(t){
 					var w = this.instance; 
-					t.assertTrue(w, "app.Application instance is truthy");
-					t.assertEqual("Test", w.name, "app.Application has correct name property value");
+					t.assertTrue(w, "tapp.Application instance is truthy");
+					t.assertEqual("Test", w.name, "tapp.Application has correct name property value");
 				})
 			]);
 
@@ -64,7 +64,7 @@
 						dojo.forEach(["bootstrap", "initialize", "postInitialize", "postCreate", "startup", "destroy"], function(method){
 							callsMap[method] = false;
 							console.log("hooking into: ", method);
-							handles.push(dojo.connect(app.Application.prototype, method, function(){
+							handles.push(dojo.connect(tapp.Application.prototype, method, function(){
 								console.log("call to Application lifecycle method: ", method);
 								callsMap[method] = true;
 							}));
@@ -102,7 +102,7 @@
 
 	<h1 class="testTitle">Application test</h1>
 
-	<p>The app.Application tests demonstrate:</p>
+	<p>The tapp.Application tests demonstrate:</p>
 	<ul>
 		<li>The class loads and gets interpreted ok</li>
 		<li>Application configuration and bootstrap works as intended</li>

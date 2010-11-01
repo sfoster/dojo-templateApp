@@ -1,8 +1,8 @@
-dojo.provide("app.Application");
+dojo.provide("tapp.Application");
 
 (function(d){
 
-	d.declare("app.Application", null, {
+	d.declare("tapp.Application", null, {
 		// summary: 
 		// 		Page-level controller class, implements the following lifecycle (phases): 
 
@@ -47,7 +47,7 @@ dojo.provide("app.Application");
 		},
 		
 		bootstrap: function() {
-			this._configure( app.config );
+			this._configure( tapp.config );
 		},
 		initialize: function() {
 			// stub

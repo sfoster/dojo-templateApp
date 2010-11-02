@@ -1,8 +1,10 @@
 dojo.provide("tapp.Application");
 
+dojo.require("tapp._ComponentManagerMixin");
+
 (function(d){
 
-	d.declare("tapp.Application", null, {
+	d.declare("tapp.Application", [tapp._ComponentManagerMixin], {
 		// summary: 
 		// 		Page-level controller class, implements the following lifecycle (phases): 
 
@@ -50,10 +52,11 @@ dojo.provide("tapp.Application");
 			this._configure( tapp.config );
 		},
 		initialize: function() {
-			// stub
+			// stub, initialize self
 		},
 		postInitialize: function() {
-			// stub
+			// stub, initialize all registered components
+			this.initComponents();
 		},
 
 		run: function() {

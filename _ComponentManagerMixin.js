@@ -30,7 +30,7 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 		
 		dojo.forEach(components, function(c){
 			var ctor = dojo.getObject(c[0]);
-			var params = dojo.mixin({},{parent: this, structure: this.structure, store: this.store}, c[1]);
+			var params = dojo.mixin({},{parent: this}, c[1]);
 			var node= c[2];
 
 			if (!ctor){console.error("Ctor not found: ", c[0]);}
@@ -61,6 +61,10 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 		this.connectEventBubble(comp);
 
 		return comp;
+	},
+
+	getComponent: function(id) {
+		return this._components[id];
 	},
 
 	connectEventBubble: function(component){
@@ -116,5 +120,18 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 	destroy: function(){
 		this.destroyComponents();
 		this.inherited(arguments);
-	}
+	},
+
+	publishInternalEvent: function(evt, args ){
+		var name = "/" + this.id + "/" + evt;
+		//console.log(this.id, "Publishing Internal Event: ", name, args);
+		return dojo.publish(name, args);
+	},
+	
+	subscribeInternalEvent: function(evt, scope, cb){
+		var name = "/" + this.id + "/" + evt;
+		//console.log(this.id, "Subscribe: ", name);
+		return dojo.subscribe(name, this, cb);
+	},
+	
 });

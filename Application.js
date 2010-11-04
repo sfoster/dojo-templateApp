@@ -8,23 +8,39 @@ dojo.require("tapp._ComponentManagerMixin");
 		// summary: 
 		// 		Page-level controller class, implements the following lifecycle (phases): 
 
+		setUpSequence: ["bootstrap", "initialize", "initComponents"],
+		runSequence:  ["postCreate", "startup"],
+		tearDownSequence: ["destroy"],
+		
 		constructor: function(params){
-			d.mixin(this, params);
+			var proto = d.getObject(this.declaredClass).prototype;
+			// copy the prototype's array properties as our own
+			this.setUpSequence = [].concat(proto.setUpSequence);
+			this.runSequence = [].concat(proto.runSequence);
+			this.tearDownSequence = [].concat(proto.tearDownSequence);
+			
+			console.log("sequence array properties copied");
+			
+			d.mixin(this, params || {});
+
+			console.log("params mixed in");
+
 			this.setUp();
 		},
-		_createSequence: function() {
+		_createSequence: function(methods) {
 			// summary: 
 			// 		Create a sequence of method calls that will execute in order, 
 			// 		with each being optionally asynchronous
-			var sequence = d.map(
-				Array.prototype.slice.apply(arguments), function(method) {
-					return d.hitch(this, method);
-				}, this);
-
+			// 		Methods can manipulate the sequence at runtime 
+			// 		e.g. to unshift or push more functions onto the queue
+			var sequence = {}, self = this;
 			sequence.start = sequence.next = function() {
-				var fn = this.shift();
+				var fn = methods.shift();
 				if(fn) {
-					return d.when(fn(), d.hitch(this, "next"));
+					if(typeof fn == "string") {
+						fn = dojo.hitch(self, fn);
+					}
+					return d.when( fn(), d.hitch(this, "next"));
 				}
 			};
 			return sequence;
@@ -35,12 +51,8 @@ dojo.require("tapp._ComponentManagerMixin");
 			// 		bootstrap: 		load dependencies, load/snarf config, create components
 			// 		init: 			init self and components
 			// 		postInitialize:	hook for post-initialization tasks
-
-			var sequence = this._createSequence(
-				"bootstrap",
-				"initialize",
-				"postInitialize"
-			);
+			console.log("setUp: ", this.setUpSequence.join(", "));
+			var sequence = this._createSequence(this.setUpSequence);
 			return sequence.start();
 		},
 		
@@ -54,16 +66,9 @@ dojo.require("tapp._ComponentManagerMixin");
 		initialize: function() {
 			// stub, initialize self
 		},
-		postInitialize: function() {
-			// stub, initialize all registered components
-			this.initComponents();
-		},
 
 		run: function() {
-			var sequence = this._createSequence(
-				"postCreate",
-				"startup"
-			);
+			var sequence = this._createSequence(this.runSequence);
 			return sequence.start();
 		},
 
@@ -76,9 +81,7 @@ dojo.require("tapp._ComponentManagerMixin");
 
 		// 	teardown phase
 		tearDown: function() {
-			var sequence = this._createSequence(
-				"destroy"
-			);
+			var sequence = this._createSequence(this.tearDownSequence);
 			return sequence.start();
 		},
 		

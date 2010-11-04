@@ -21,9 +21,21 @@ dojo.ready(function(){
 	});
 	
 	dojo.declare("tapp.tests.Application.TestComponent", [tapp._ComponentMixin], {
-		count: 0,
-		constructor: function() {
+		testEventHeard: false,
+		constructor: function(args) {
+			dojo.mixin(this, args || {});
+			
 			dojo.getObject(this.declaredClass).count++;
+			console.log("TestComponent ctor, exposing: ", this.exposedMethod);
+			this.expose("exposedTestComponentMethod", "exposedMethod");
+			
+			this.subscribeInternalEvent("testEvent", this, "testEventListener")
+		},
+		exposedMethod: function(){
+			return true;
+		},
+		testEventListener: function(){
+			this.testEventHeard = true;
 		}
 	});
 	tapp.tests.Application.TestComponent.count = 0;
@@ -98,16 +110,44 @@ dojo.ready(function(){
 				var app = this.instance;
 				t.assertEqual("app_configureTest", app.id, "Application instance configured with correct id");
 			}
-		}),
-		new TF("component", {
+		})
+	]);
+	doh.register("Components", [
+		new TF("component instantiation", {
 			config: { 
 				id: "app_componentTest",
-				baseComponents: [ ["tapp.tests.Application.TestComponent", {}] ]
+				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
 			},
 			runTest: function(t) {
 				var app = this.instance;
 				t.assertTrue(app, "Application instance is truthy");
 				t.assertTrue(tapp.tests.Application.TestComponent.count, "TestComponent.count is truthy");
+				t.assertTrue(app.getComponent("componentTest"), "getComponent with a known id returns a truthy value");
+				t.assertEqual(app, app.getComponent("componentTest").getParent(), "component's parent is the app");
+			}
+		}),
+		new TF("component exposed method", {
+			config: { 
+				id: "app_componentExposedMethodTest",
+				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
+			},
+			runTest: function(t) {
+				var app = this.instance;
+				t.assertEqual("function", typeof app.exposedTestComponentMethod, "Exposed component method is a property on the app");
+				t.assertTrue(app.exposedTestComponentMethod(), "Exposed component method returns truthy value");
+			}
+		}),
+		new TF("component subscribeInternalEvent", {
+			config: { 
+				id: "app_componentExposedMethodTest",
+				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
+			},
+			runTest: function(t) {
+				var app = this.instance, 
+					component = app.getComponent("componentTest");
+				t.assertFalse(component.testEventHeard, "Before publishing the event, the testEventHeard flag is falsy");
+				app.publishInternalEvent("testEvent", []);
+				t.assertTrue(component.testEventHeard, "The published event caused the testEventHeard flag to be set on the component");
 			}
 		})
 	]);

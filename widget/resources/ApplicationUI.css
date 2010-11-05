@@ -1,0 +1,17 @@
+.tappApplication {
+	height: 100%;
+}
+
+.tappApplicationPane {
+	border: 1px solid #999;
+	padding: 10px;
+	margin: 2px;
+}
+
+.tappApplicationTop {
+	height: 2em;
+}
+
+.tappApplicationBottom {
+	height: 2em;
+}

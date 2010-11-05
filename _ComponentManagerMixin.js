@@ -6,7 +6,6 @@ dojo.provide("tapp._ComponentManagerMixin");
 dojo.declare("tapp._ComponentManagerMixin", null, {
 	components: null,
 	initComponents: function(){
-		//console.log("InitComponents() - ", this.components.length, " components");
 		this._components = {};
 		this._componentConstructors = {};
 		
@@ -28,21 +27,32 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 			components.push(uniqComponents[name]);
 		}
 		
+		console.log("initComponents, components: ", components);
 		dojo.forEach(components, function(c){
 			var ctor = dojo.getObject(c[0]);
 			var params = dojo.mixin({},{parent: this}, c[1]);
 			var node= c[2];
 
-			if (!ctor){console.error("Ctor not found: ", c[0]);}
+			console.log("initComponents, using ctor %s, params: %o, node: %o", c[0], params, node);
+
+			if (!ctor){
+				console.error("Ctor not found: ", c[0]);
+			}
 			// TODO: check buildRendering and buildRenderingDeferred are the right impl. here
 			// as setUp and run phases can be async, we can just return a promise from here?
-			if (node && this.buildRenderingDeferred){
-				this.buildRenderingDeferred.addCallback(this, function(){
-					c=this.registerComponent(this.createComponent(ctor, params, this[node]||undefined));
-				}, node);
-			}else{
-				c=this.registerComponent(this.createComponent(ctor, params),ctor,params);
-			}
+			// if (node){
+			// 	this.buildRenderingDeferred.addCallback(this, function(){
+			// 	}, node);
+			// }else{
+				console.log("Creating component");
+				var comp = this.createComponent(ctor, params, node||undefined);
+				console.log("/Creating component: ", comp);
+
+				console.log("Registering component");
+				c=this.registerComponent(comp);
+				console.log("/Registering component");
+				// c=this.registerComponent(this.createComponent(ctor, params),ctor,params);
+			// }
 
 		},this);
 	},
@@ -58,8 +68,12 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 			this["_register" + comp.componentType](comp, [ctor, params]);
 		}
 
-		this.connectEventBubble(comp);
+		// components can have only one parent: me
+		if(!comp.parent || comp.parent !== this) {
+			comp.parent = this;
+		}
 
+		this.connectEventBubble(comp);
 		return comp;
 	},
 
@@ -108,7 +122,9 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 
 		//instantiate the component, with the node above if found
 		//console.log("create component with params: ", params);
+		console.log("createComponent w. ", params,node || undefined);
 		var inst = new component(params,node || undefined);
+		console.log("/createComponent");
 		return inst; //new component instance
 	},
 	destroyComponents: function(){

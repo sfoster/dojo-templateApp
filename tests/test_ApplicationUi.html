@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>ApplicationUi Test</title>
+	
+	<!-- required: a default theme file, and ApplicationUi css -->
+	<link rel="stylesheet" id="themeStyles" href="../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../widget/resources/ApplicationUi.css">
+
+	<style type="text/css">
+		@import "../../dojo/resources/dojo.css";
+		@import "../../dijit/tests/css/dijitTests.css"; 
+		html, body {
+			margin: 0; 
+			padding: 0;
+			overflow: hidden;
+			height: 100%;
+		}
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript">
+		djConfig = {
+			isDebug: true,
+			parseOnLoad: true,
+			modulePaths: {
+				tapp: '../dojo-templateApp'
+			}
+		}
+	</script>
+	<script type="text/javascript" src="../../dojo/dojo.js"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../dijit/tests/_testCommon.js"></script>
+	
+	<!-- debugging include -->
+	<script type="text/javascript" src="../widget/ApplicationUi.js"></script>
+	<script type="text/javascript">
+		dojo.require("tapp.Application");
+		dojo.require("tapp.widget.ApplicationUi");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		
+		myns = {};
+		myns.appConfig = {
+			id: "testApp",
+			baseComponents: [ 
+				["tapp.widget.ApplicationUi", { id: "testApp_ui", templateKey: "myns.uiConfig.appTemplate" }, "appUI"] 
+			]
+		};
+		myns.uiConfig = {
+			appTemplate: dojo.cache("tapp.widget", "resources/ApplicationUi.html")
+		}
+		
+		dojo.ready(function(){
+			
+			var app = myns.app = new tapp.Application(myns.appConfig);
+			app.runSequence.push( 
+				dojo.hitch(app, "publishInternalEvent", "startup"),
+				function() { console.log("post startup"); }
+			);
+			app.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<div id="appUI">
+		<h1 class="testTitle">ApplicationUi test</h1>
+	</div>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>ApplicationUi Test</title>
+	
+	<!-- required: a default theme file, and ApplicationUi css -->
+	<link rel="stylesheet" id="themeStyles" href="../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../widget/resources/ApplicationUi.css">
+
+	<style type="text/css">
+		@import "../../dojo/resources/dojo.css";
+		@import "../../dijit/tests/css/dijitTests.css"; 
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript">
+		djConfig = {
+			isDebug: true,
+			parseOnLoad: true,
+			modulePaths: {
+				tapp: '../dojo-templateApp'
+			}
+		}
+	</script>
+	<script type="text/javascript" src="../../dojo/dojo.js"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../dijit/tests/_testCommon.js"></script>
+	
+	<!-- debugging include -->
+	<script type="text/javascript" src="../widget/ApplicationUi.js"></script>
+	<script type="text/javascript">
+		dojo.require("tapp.Application");
+		dojo.require("tapp.widget.ApplicationUi");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+        dojo.require("doh.runner");
+		dojo.require("tapp.tests.Fixture");
+
+		dojo.ready(function(){
+			// a fixture class to keep the tests DRY
+			var TF = dojo.declare(
+				tapp.tests.Fixture, {
+				setUp: function() {
+					this.app = new tapp.Application({
+						id: this.name + "_app",
+						name: "Test"
+					});
+					this.ui = new tapp.widget.ApplicationUi({
+						id: this.name + "_widget",
+						name: "Test"
+					});
+					this.contentPane = new dijit.layout.ContentPane({ region: "center" });
+					this.ui.addChild(this.contentPane);
+				},
+				tearDown: function() {
+					this.ui.destroyRecursive();
+					this.app.destroy();
+					this.ui = this.app = this.contentPane = null;
+				}
+			});
+
+			doh.register("smoketest", [
+				function classExists(t){
+					t.assertTrue(tapp.widget.ApplicationUi);
+					t.assertEqual("function", typeof tapp.widget.ApplicationUi, "ApplicationUI is a function (class)");
+
+					t.assertTrue(tapp.Application, "tapp.Application is truthy");
+					t.assertEqual("function", typeof tapp.Application, "Application is a function (class)");
+				},
+				new TF("fixtureTest", function(t){
+					t.assertTrue(this.ui, "ApplicationUi instance is truthy");
+					t.assertEqual("Test", this.ui.name, "ApplicationUi has correct name property value");
+
+					t.assertTrue(this.app, "Application instance is truthy");
+					t.assertEqual("Test", this.app.name, "Application has correct name property value");
+
+					console.log("fixtureTest, this.contentPane:", this.contentPane);
+					t.assertTrue(this.contentPane, "ContentPane instance is truthy");
+
+					this.ui.placeAt(dojo.body());
+					this.ui.startup();
+
+					t.assertTrue(this.ui._started, "ApplicationUI _started property is truthy after startup");
+				}),
+				new TF("fixtureTeardown", function(t){
+					t.assertTrue(this.ui, this.name + ": ApplicationUi instance is truthy");
+					t.assertEqual("Test", this.ui.name, this.name + ": ApplicationUi has correct name property value");
+
+					t.assertTrue(this.app, this.name + ": Application instance is truthy");
+					t.assertEqual("Test", this.app.name, this.name + ": Application has correct name property value");
+
+					t.assertTrue(this.contentPane, this.name + ": ContentPane instance is truthy");
+					
+					this.ui.placeAt(dojo.body());
+					this.ui.startup();
+					
+					this.tearDown();
+					this.tearDown = function() {}; // replace fixture tearDown as we already ran it
+					
+					t.assertFalse(this.ui, this.name + ": ApplicationUi instance is falsey after tearDown");
+					t.assertFalse(this.app, this.name + ": Application instance is falsey after tearDown");
+					t.assertFalse(this.contentPane, this.name + ": ContentPane instance is falsey");
+					
+				})
+			]);
+
+			doh.register("ApplicationUi", [
+				new TF("Rendering", function(t){
+					var w = this.ui;
+					w.placeAt(dojo.body());
+					w.startup();
+
+					t.assertEqual(w.domNode.parentNode, dojo.body(), "widget's parentNode is the body");
+					t.assertTrue(w.domNode.offsetHeight, "widget has offsetHeight");
+				}), 
+				new TF("UI as App component", function(t){
+					var w = this.ui, 
+						app = this.app;
+					app.registerComponent(w);
+					t.assertEqual(app, this.ui.getParent(), "ApplicationUI's parent is the app");
+				}),
+				new TF("UI recieves internal events", function(t){
+					var w = this.ui, 
+						app = this.app, 
+						eventReceived = false;
+					app.registerComponent(w);
+					w.subscribeInternalEvent("testEvent", this, function(){
+						eventReceived = true;
+					});
+					app.publishInternalEvent("testEvent", []);
+					
+					t.assertTrue(eventReceived, "ApplicationUI's event listen caught the internal event we published");
+				}),
+				new TF("UI updated from app events", function(t){
+					var w = this.ui, 
+						app = this.app, 
+						eventReceived = false;
+					app.registerComponent(w);
+					
+					w.subscribeInternalEvent("testEvent", function() {
+						w.containerNode
+					});
+					app.publishInternalEvent("testEvent", ["center", "New Content"]);
+					
+					t.assertEqual("New Content", w.get("panelContent"), "ApplicationUI's event listen caught the internal event we published");
+				})
+			]);
+			doh.run();
+
+		});
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">ApplicationUi test</h1>
+
+</body>
+</html>

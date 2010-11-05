@@ -60,7 +60,7 @@ dojo.ready(function(){
 			setUp: function() {
 				var callsMap = tapp.tests.Application.lifecycleMethodCalls = {};
 				var handles = this.handles = [];
-				dojo.forEach(["bootstrap", "initialize", "postInitialize", "postCreate", "startup", "destroy"], function(method){
+				dojo.forEach(["bootstrap", "initialize", "initComponents", "postCreate", "startup", "destroy"], function(method){
 					callsMap[method] = false;
 					console.log("hooking into: ", method);
 					handles.push(dojo.connect(tapp.Application.prototype, method, function(){
@@ -110,6 +110,28 @@ dojo.ready(function(){
 				var app = this.instance;
 				t.assertEqual("app_configureTest", app.id, "Application instance configured with correct id");
 			}
+		}),
+		new TF("insert lifecyle step", function(t) {
+			var app = this.instance, 
+				postStartupCalled = false, 
+				postCreateCalled = false;
+				
+			app.postStartup = function() {
+				postStartupCalled = true;
+			}
+			app.runSequence.push("postStartup");
+
+			dojo.connect(app, "postCreate", function() {
+				postCreateCalled = true;
+				t.assertFalse(postStartupCalled, "postStartup has not yet run");
+			});
+
+			app.run();
+
+			t.assertTrue(postCreateCalled, "postCreate ran");
+			t.assertTrue(postStartupCalled, "postStartup ran");
+
+			app.tearDown();
 		})
 	]);
 	doh.register("Components", [
@@ -139,7 +161,7 @@ dojo.ready(function(){
 		}),
 		new TF("component subscribeInternalEvent", {
 			config: { 
-				id: "app_componentExposedMethodTest",
+				id: "app_subscribeInternalEventTest",
 				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
 			},
 			runTest: function(t) {

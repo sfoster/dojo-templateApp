@@ -12,6 +12,9 @@ dojo.require("tapp._ComponentManagerMixin");
 		runSequence:  ["postCreate", "startup"],
 		tearDownSequence: ["destroy"],
 		
+		baseComponents: null, 
+		extraComponents: null,
+
 		constructor: function(params){
 			var proto = d.getObject(this.declaredClass).prototype;
 			// copy the prototype's array properties as our own
@@ -40,7 +43,8 @@ dojo.require("tapp._ComponentManagerMixin");
 					if(typeof fn == "string") {
 						fn = dojo.hitch(self, fn);
 					}
-					return d.when( fn(), d.hitch(this, "next"));
+					return d.when( fn(), d.hitch(this, "next") );
+				} else {
 				}
 			};
 			return sequence;
@@ -52,8 +56,16 @@ dojo.require("tapp._ComponentManagerMixin");
 			// 		init: 			init self and components
 			// 		postInitialize:	hook for post-initialization tasks
 			console.log("setUp: ", this.setUpSequence.join(", "));
-			var sequence = this._createSequence(this.setUpSequence);
-			return sequence.start();
+
+			// run setUp as a synchronous sequence: 
+			var fn, 
+				methods = this.setUpSequence;
+			while((fn = methods.shift())) {
+				if(typeof fn == "string") {
+					fn = dojo.hitch(this, fn);
+				}
+				fn();
+			}
 		},
 		
 		_configure: function(config) {

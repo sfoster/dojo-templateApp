@@ -25,14 +25,18 @@ I fully expect this to continue to evolve.
 Usage
 -----
 
-See the tests/test_ApplicationUI.html page for an example of how the pieces can fit together. 
+You can expect to use code from the tapp.* namespace as-is, or derive your own app template from it. Delete stuff you don't need and add stuff you do. If you find yourself adding stuff time and again, patches/pull requests are welcomed. 
+
+See the tests/test_ApplicationUI.html page for an example of how the pieces can fit together.
 
 TODO
 ----
 
-* More docs
 * Error reporting
-* Further field testing
+* Config
 * Data handling examples
-
-
+* History, state freeze/thaw
+* Initial loading screen
+* Data/Services layer, store init
+* Further field testing
+* (and more docs)

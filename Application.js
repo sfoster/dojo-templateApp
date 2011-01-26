@@ -14,20 +14,23 @@ dojo.require("tapp._ComponentManagerMixin");
 		
 		baseComponents: null, 
 		extraComponents: null,
-
+		
+		config: null,
+		
 		constructor: function(params){
-			var proto = d.getObject(this.declaredClass).prototype;
-			// copy the prototype's array properties as our own
-			this.setUpSequence = [].concat(proto.setUpSequence);
-			this.runSequence = [].concat(proto.runSequence);
-			this.tearDownSequence = [].concat(proto.tearDownSequence);
-			
-			console.log("sequence array properties copied");
-			
+			//this.setUpSequence = this.runSequence = this.tearDownSequence = null;
 			d.mixin(this, params || {});
 
 			console.log("params mixed in");
 
+		},
+		postscript: function() {
+			// copy the prototype's array properties as our own
+			this.setUpSequence = [].concat(this.setUpSequence);
+			this.runSequence = [].concat(this.runSequence);
+			this.tearDownSequence = [].concat(this.tearDownSequence);
+			
+			console.log("tapp.postscript, running setUp");
 			this.setUp();
 		},
 		_createSequence: function(methods) {
@@ -61,6 +64,7 @@ dojo.require("tapp._ComponentManagerMixin");
 			var fn, 
 				methods = this.setUpSequence;
 			while((fn = methods.shift())) {
+				console.log("setUp sequence: " + fn);
 				if(typeof fn == "string") {
 					fn = dojo.hitch(this, fn);
 				}
@@ -69,11 +73,12 @@ dojo.require("tapp._ComponentManagerMixin");
 		},
 		
 		_configure: function(config) {
-			d.mixin(config || {});
+			this.config = config ? config : this.config || {};
 		},
 		
 		bootstrap: function() {
-			this._configure( tapp.config );
+			this._configure();
+			console.log("bootstrap, config: ", this.config);
 		},
 		initialize: function() {
 			// stub, initialize self

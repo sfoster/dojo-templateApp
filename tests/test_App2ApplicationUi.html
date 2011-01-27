@@ -32,6 +32,7 @@
 	<script type="text/javascript" src="../widget/ApplicationUi.js"></script>
 	<script type="text/javascript">
 		dojo.require("tapp.Application");
+		dojo.require("tapp.defaultConfig");
 		dojo.require("tapp.widget.ApplicationUi");
 		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
 
@@ -39,7 +40,11 @@
 		dojo.require("tapp.tests.Fixture");
 
 		dojo.ready(function(){
+			var uiConfig = tapp.uiConfig = {
+				appTemplate: dojo.cache("tapp.widget", "resources/ApplicationUi.html")
+			}
 			// a fixture class to keep the tests DRY
+			
 			var TF = dojo.declare(
 				tapp.tests.Fixture, {
 				setUp: function() {
@@ -49,6 +54,7 @@
 					});
 					this.ui = new tapp.widget.ApplicationUi({
 						id: this.name + "_widget",
+						templateKey: "tapp.uiConfig.appTemplate",
 						name: "Test"
 					});
 					this.contentPane = new dijit.layout.ContentPane({ region: "center" });

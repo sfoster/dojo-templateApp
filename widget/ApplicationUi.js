@@ -47,6 +47,7 @@ dojo.declare(
 				throw new Error(this.declaredClass + " resolving templateKey '"+this.templateKey+"' returned an empty string");
 			}
 	    }
+		console.log(this.declaredClass + " / templateKey: ", this.templateString);
 
 		this.inherited(arguments);
 		console.log(this.declaredClass + " /buildRendering");

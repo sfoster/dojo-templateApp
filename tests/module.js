@@ -1,7 +1,8 @@
 dojo.provide("tapp.tests.module");
 try{
-	// doh.registerUrl("Application", dojo.moduleUrl("tapp", "tests/test_Application.html"), 99999999);
+	// doh.registerUrl("App2UI", dojo.moduleUrl("tapp", "tests/test_App2ApplicationUi.html"), 99999999);
 	dojo.require("tapp.tests.Application");
+	dojo.require("tapp.tests.Error");
 }catch(e){
 	doh.debug(e);
 }

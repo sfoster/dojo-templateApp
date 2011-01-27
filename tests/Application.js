@@ -9,10 +9,13 @@ dojo.ready(function(){
 	// a fixture class to keep the tests DRY
 	var TF = dojo.declare(tapp.tests.Fixture, {
 		setUp: function() {
-			this.instance = new tapp.Application( dojo.delegate({
+			console.log(this.name + "fixture setUp, w. ctorArgs: ", this.ctorArgs);
+			var args = dojo.delegate({
 				id: this.name + "_app",
 				name: "Test"
-			}, this.config || {}));
+			}, this.ctorArgs || {});
+			
+			this.instance = new tapp.Application(args);
 		},
 		tearDown: function() {
 			this.instance.destroy();
@@ -43,7 +46,7 @@ dojo.ready(function(){
 	// globally-accessible map to allow checking fixture cleanup btween tests
 	tapp.tests.Application.lifecycleMethodCalls = {}
 
-	doh.register("smoketest", [
+	doh.register("Application smoketest", [
 		function classExists(t){
 			t.assertTrue(tapp.Application);
 			t.assertEqual("function", typeof tapp.Application);
@@ -55,88 +58,37 @@ dojo.ready(function(){
 		})
 	]);
 
-	doh.register("Lifecycle", [
-		new TF("sequences", {
+	doh.register("Application methods", [
+		new TF("instantiation", {
 			setUp: function() {
-				var callsMap = tapp.tests.Application.lifecycleMethodCalls = {};
-				var handles = this.handles = [];
-				dojo.forEach(["bootstrap", "initialize", "initComponents", "postCreate", "startup", "destroy"], function(method){
-					callsMap[method] = false;
-					console.log("hooking into: ", method);
-					handles.push(dojo.connect(tapp.Application.prototype, method, function(){
-						console.log("call to Application lifecycle method: ", method);
-						callsMap[method] = true;
-					}));
+				var initialized = false;
+				var h = dojo.connect(tapp.Application.prototype, "initialize", this, function(){
+					this.instanceInitialized = true;
 				});
 				this.inherited("setUp", arguments);
+				dojo.disconnect(h);
+			}, 
+			runTest: function(t) {
+				t.t(this.instanceInitialized, "initialize was called during instantiation");
+			}
+		}),
+		new TF("config", {
+			setUp: function() {
+				// put a config object where our fixture's setUp will find it
+				this.ctorArgs = { config: { prop: "value" } };
+				this.inherited("setUp", arguments);
+				console.log("after setup, this.instance: ", this.instance);
 			},
 			runTest: function(t){
-				var app = this.instance, 
-					callsMap = tapp.tests.Application.lifecycleMethodCalls;
-				app.run();
-				app.tearDown();
-				
-				var ok = true;
-				for(var m in callsMap) {
-					t.assertTrue(callsMap[m],  m + " method was called");
-					ok &= callsMap[m];
-				}
-				t.assertTrue(ok, "All setUp lifecycle methods were called");
-			}, 
-			tearDown: function() {
-				var handles = this.handles, hdl;
-				
-				while(handles.length) {
-					dojo.disconnect(handles.shift());
-				}
-				tapp.tests.Application.lifecycleMethodCalls = {};
-
-				this.inherited("tearDown", arguments);
-			}
-		}),
-		new TF("tearDown fixture", function(t) {
-			var app = this.instance, 
-				callsMap = tapp.tests.Application.lifecycleMethodCalls;
-			app.run();
-			app.tearDown();
-			
-			for(var m in callsMap) {
-				t.assertFalse(m in callsMap,  m + " disconnected");
-			}
-		}),
-		new TF("configure", {
-			config: { id: "app_configureTest" },
-			runTest: function(t) {
 				var app = this.instance;
-				t.assertEqual("app_configureTest", app.id, "Application instance configured with correct id");
+				// confirm our config made it through to the instance
+				t.assertTrue(app.config.prop);
 			}
-		}),
-		new TF("insert lifecyle step", function(t) {
-			var app = this.instance, 
-				postStartupCalled = false, 
-				postCreateCalled = false;
-				
-			app.postStartup = function() {
-				postStartupCalled = true;
-			}
-			app.runSequence.push("postStartup");
-
-			dojo.connect(app, "postCreate", function() {
-				postCreateCalled = true;
-				t.assertFalse(postStartupCalled, "postStartup has not yet run");
-			});
-
-			app.run();
-
-			t.assertTrue(postCreateCalled, "postCreate ran");
-			t.assertTrue(postStartupCalled, "postStartup ran");
-
-			app.tearDown();
 		})
 	]);
 	doh.register("Components", [
 		new TF("component instantiation", {
-			config: { 
+			ctorArgs: { 
 				id: "app_componentTest",
 				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
 			},
@@ -149,7 +101,7 @@ dojo.ready(function(){
 			}
 		}),
 		new TF("component exposed method", {
-			config: { 
+			ctorArgs: { 
 				id: "app_componentExposedMethodTest",
 				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
 			},
@@ -160,7 +112,7 @@ dojo.ready(function(){
 			}
 		}),
 		new TF("component subscribeInternalEvent", {
-			config: { 
+			ctorArgs: { 
 				id: "app_subscribeInternalEventTest",
 				baseComponents: [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
 			},

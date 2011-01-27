@@ -5,63 +5,76 @@ dojo.provide("tapp._ComponentManagerMixin");
 
 dojo.declare("tapp._ComponentManagerMixin", null, {
 	components: null,
+	
+	_componentsInitialized: false,
+	
+	_unregisteredComponents: null,
+	
+	constructor: function() {
+		this._unregisteredComponents = [];
+	},
+	
 	initComponents: function(){
-		this._components = {};
-		this._componentConstructors = {};
+
+		var componentsMap = this._components = {};
+		var constructorsMap  = this._componentConstructors = {};
 		
-		// combine any extraComponents w. the baseComponents list
-		var c, 
-			uniqComponents = {}, 
-			empty = {},
+		var empty = {},
+			unRegistered = this._unregisteredComponents || [], 
+			comp = null,
 			components = this.components = [], 
-			allComponents = [].concat(this.baseComponents).concat(this.extraComponents);
+			// combine any extraComponents w. the baseComponents list
+			allComponents = [].concat(this.baseComponents || []).concat(this.extraComponents || []);
 		
-		while((c = allComponents.shift())) {
-			uniqComponents[c[0]] = c;
-		}
-		
-		for(var name in uniqComponents) {
-			if(name in empty) {
-				continue;
+		dojo.forEach(allComponents, function(c){
+			// ["ecollege.slp.CoreServices", { id: "services" }]
+			var className = c[0], 
+				param = c[1];
+
+			if(className in constructorsMap) {
+				// components must be unique - one of each Class
+				return;
 			}
-			components.push(uniqComponents[name]);
-		}
-		
-		console.log("initComponents, components: ", components);
-		dojo.forEach(components, function(c){
-			var ctor = dojo.getObject(c[0]);
-			var params = dojo.mixin({},{parent: this}, c[1]);
-			var node= c[2];
 
-			console.log("initComponents, using ctor %s, params: %o, node: %o", c[0], params, node);
-
+			var ctor = dojo.getObject(className);
 			if (!ctor){
 				console.error("Ctor not found: ", c[0]);
 			}
-			// TODO: check buildRendering and buildRenderingDeferred are the right impl. here
-			// as setUp and run phases can be async, we can just return a promise from here?
-			// if (node){
-			// 	this.buildRenderingDeferred.addCallback(this, function(){
-			// 	}, node);
-			// }else{
-				console.log("Creating component");
-				var comp = this.createComponent(ctor, params, node||undefined);
-				console.log("/Creating component: ", comp);
 
-				console.log("Registering component");
-				c=this.registerComponent(comp);
-				console.log("/Registering component");
-				// c=this.registerComponent(this.createComponent(ctor, params),ctor,params);
-			// }
+			var params = dojo.mixin({},{parent: this}, param);
+			var node= c[2];
 
-		},this);
+			// console.log("initComponents, using ctor %s, params: %o, node: %o", className, params, node);
+			// console.log("Creating component: ", params.id);
+
+			unRegistered.push(
+				this.createComponent(ctor, params, node||undefined)
+			);
+			
+		}, this);
+		
+		this._componentsInitialized = true;
+
+		// register all pending components
+		while((comp = unRegistered.shift())) {
+			components.push( this.registerComponent(comp) );
+		}
 	},
 
 	registerComponent: function(comp, ctor, params){
 		if(!comp){
-			console.error("Cannot register component", comp);
+			console.error("Cannot register falsy component", comp);
+			return null;
+		}
+
+		if(!this._componentsInitialized) {
+			// if registerComponent gets called before initComponents, we stash for later registration
+			console.log("defering registerComponent, with comp: ", comp.id);
+			this._unregisteredComponents.push(comp);
 			return;
 		}
+
+		// console.log("creating _components entry for: ", comp.id, this._components);
 		this._components[comp.id] = comp;
 
 		if (this["_register" + comp.componentType]){
@@ -118,15 +131,14 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 				component = dojo.getObject(component);
 			}
 		}
-		if(!component){return;}
+		if(!component){return null;}
 
 		//instantiate the component, with the node above if found
-		//console.log("create component with params: ", params);
-		console.log("createComponent w. ", params,node || undefined);
+		// console.log("createComponent w. ", params,node || undefined);
 		var inst = new component(params,node || undefined);
-		console.log("/createComponent");
 		return inst; //new component instance
 	},
+
 	destroyComponents: function(){
 		dojo.forEach(this._components, function(c){
 			if (c.destroy){ c.destroy(); }
@@ -140,14 +152,14 @@ dojo.declare("tapp._ComponentManagerMixin", null, {
 
 	publishInternalEvent: function(evt, args ){
 		var name = "/" + this.id + "/" + evt;
-		//console.log(this.id, "Publishing Internal Event: ", name, args);
+		// console.log(this.id, "Publishing Internal Event: ", name, args);
 		return dojo.publish(name, args);
 	},
 	
 	subscribeInternalEvent: function(evt, scope, cb){
 		var name = "/" + this.id + "/" + evt;
 		//console.log(this.id, "Subscribe: ", name);
-		return dojo.subscribe(name, this, cb);
-	},
+		return dojo.subscribe(name, scope, cb);
+	}
 	
 });

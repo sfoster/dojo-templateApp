@@ -1,6 +1,8 @@
 dojo.provide("tapp.Application");
 
 dojo.require("tapp._ComponentManagerMixin");
+dojo.require("dojox.lang.functional.object");
+dojo.require("dojox.lang.utils");
 
 (function(d){
 
@@ -46,8 +48,31 @@ dojo.require("tapp._ComponentManagerMixin");
 		},
 
 		_configure: function(config) {
-			console.log(this.declaredClass + " _configure: " + dojo.toJson(config || {}));
-			this.config = config ? config : this.config || {};
+			// summary: 
+			// 		Assemble config for the app and components
+			var utils = dojox.lang.utils;
+
+			// merge over any instance config properties on top of module config
+			config = dojo.mixin({}, tapp.config, config || {});
+
+			// look for config params in djConfig.kernelConfig
+			// if the host page is server-generated, that would be a place to configure also
+			if(dojo.config.kernelConfig) {
+				utils.updateWithObject(config, dojo.config.kernelConfig, true);
+			}
+
+			// merge in params from our querystring
+			var queryArgs = dojo.queryToObject(location.search.substring(1));
+			// we support dot-paths e.g. ?user.name=foo
+			for(var paramName in queryArgs) {
+				if(paramName.indexOf(".") > 0) {
+					dojo.setObject(paramName, queryArgs[paramName], queryArgs);
+					delete queryArgs[paramName];
+				}
+			}
+			utils.updateWithObject(config, queryArgs, true);
+
+			this.config = config;
 		},
 		
 		initialize: function() {

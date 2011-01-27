@@ -13,7 +13,7 @@ dojo.ready(function(){
 			var args = dojo.delegate({
 				id: this.name + "_app",
 				name: "Test"
-			}, this.ctorArgs || {});
+			}, this.ctorArgs);
 			
 			this.instance = new tapp.Application(args);
 		},

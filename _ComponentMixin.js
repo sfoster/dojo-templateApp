@@ -22,7 +22,7 @@ dojo.declare("tapp._ComponentMixin", [dijit._Contained], {
 
 	subscribeInternalEvent: function(evt, scope, cb){
 		var name = "/" + this.getParent().id + "/" + evt;
-		//console.log(this.id, "Subscribe: ", name);
+		// console.log("_ComponentMixin: subscribeInternalEvent", name);
 		return dojo.subscribe(name, this, cb);
 	},
 
@@ -30,5 +30,17 @@ dojo.declare("tapp._ComponentMixin", [dijit._Contained], {
 		var name = "/" + this.getParent().id + "/" + evt;
 		//console.log(this.id, "Publishing Internal Event: ", name, args);
 		return dojo.publish(name, args);
+	},
+	
+	destroy: function() {
+		var parent = this.getParent();
+		// unhook any methods we exposed on the parent
+		this._exposeds && dojo.forEach(this._exposeds, function(methodName){
+			delete parent[methodName];
+		});
+
+		// disconnect/unsubscribe any handles
+		this._connects && dojo.forEach(this._connects, dojo.disconnect, dojo);
+		this._subscribes && dojo.forEach(this._subscribes, dojo.unsubscribe, dojo);
 	}
 });

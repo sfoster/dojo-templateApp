@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Page Title</title>
+
+	<link id="themeStyles" rel="stylesheet" href="../../dojo/resources/dojo.css"/>
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+	<style type="text/css">
+		html, body {
+			margin: 0; padding: 0; 
+			overflow: hidden;
+			height: 100%;
+		}
+		.appMainLayout {
+			height: 100%;
+			width: 100%;
+		}
+		.appTopRegion {
+			height: 24px;
+		}
+		.appLeftRegion {
+			width: 28em;
+		}
+		.appBottomRegion {
+			height: 24px;
+		}
+		
+	</style>
+	<style type="text/css">
+		html, body {
+			margin: 0; padding: 5px;
+		}
+	</style>		
+
+
+	<script type="text/javascript">
+		djConfig = {
+			isDebug: true,
+			parseOnLoad: true,
+			modulePaths: { "tapp": "../dojo-templateApp" },
+			require: ['tapp.Application','tapp.defaultConfig'],
+			kernelConfig: {
+				id: "kernel",
+				mixins: ["tapp.Application"],
+				extraComponents: [["dojo.store.Memory", { id: "store" }]]
+				// [ ["tapp.tests.Application.TestComponent", { id: "componentTest" }] ]
+			}
+		}
+	</script>
+	<script type="text/javascript" src="../../dojo/dojo.js"></script>
+	<script type="text/javascript" src="../kernel.js"></script>
+	<script type="text/javascript">
+		dojo.require("tapp.widget.ApplicationUi");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dojo.store.Memory");
+		
+		dojo.ready(function(){
+			// 
+		});
+	</script>
+</head>
+<body class="claro">
+	<div dojoType="tapp.widget.ApplicationUi" class="appMainLayout" id="ui">
+		<div dojoType="dijit.layout.ContentPane" region="top" id="topPane" class="appTopRegion">top</div>
+		<div dojoType="dijit.layout.ContentPane" region="left" id="leftPane" class="appLeftRegion">left</div>
+		<div dojoType="dijit.layout.ContentPane" region="center" id="centerPane" class="appCenterRegion">center</div>
+		<div dojoType="dijit.layout.ContentPane" region="bottom" id="bottomPane" class="appBottomRegion">bottom</div>
+	</div>
+</body>
+</html>

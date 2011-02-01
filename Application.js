@@ -10,7 +10,7 @@ dojo.require("dojox.lang.utils");
 		// summary: 
 		// 		Page-level controller class, implements the following lifecycle (phases): 
 
-		baseComponents: null, 
+		baseComponents: [], 
 		extraComponents: null,
 		
 		config: null,
@@ -79,9 +79,13 @@ dojo.require("dojox.lang.utils");
 			// stub, initialize self
 			console.log(this.declaredClass + " initialize");
 			this._configure(this.config || {});
+			this.publishInternalEvent("initialize", [this]);
 		},
 
 		startup: function(){
+			if(this.parseOnLoad){
+				dojo.parser.parse();
+			}
 			// stub
 		},
 
